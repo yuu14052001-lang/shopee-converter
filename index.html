@@ -1,40 +1,88 @@
-async function process() {
-    const input = document.getElementById('inputUrl').value.trim();
-    if (!input) return;
-    
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('result-area').style.display = 'none';
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Convert Shopee 17338730479</title>
+    <style>
+        :root { --orange: #ee4d2d; --green: #28a745; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; display: flex; justify-content: center; padding: 20px; }
+        .box { background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { color: var(--orange); text-align: center; margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; margin-bottom: 15px; font-size: 14px; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .btn-main { background: var(--orange); color: #fff; }
+        .btn-copy { background: var(--green); color: #fff; margin-top: 10px; }
+        #loading { display: none; text-align: center; color: var(--orange); font-weight: bold; margin: 15px 0; }
+        #result { display: none; margin-top: 20px; padding: 15px; background: #fff8f6; border: 2px dashed var(--orange); border-radius: 10px; }
+        .url-output { word-break: break-all; font-size: 12px; color: #0056b3; display: block; background: #fff; padding: 10px; border-radius: 5px; margin: 10px 0; border: 1px solid #eee; }
+    </style>
+</head>
+<body>
 
-    try {
-        let target = "";
+<div class="box">
+    <h2>Shopee Convert Pro</h2>
+    <input type="text" id="inputUrl" placeholder="Dán link s.shopee.vn vào đây...">
+    <button class="btn-main" onclick="handleConvert()">CHUYỂN ĐỔI NGAY</button>
+    <div id="loading">ĐANG GIẢI MÃ LINK...</div>
+    <div id="result">
+        <label style="font-weight: bold; font-size: 14px;">Link của bạn (Đã sạch ID cũ):</label>
+        <span class="url-output" id="finalLink"></span>
+        <button class="btn-copy" onclick="copy()">SAO CHÉP LINK</button>
+    </div>
+</div>
 
-        // Nếu là link ngắn, bắt buộc phải qua GAS
-        if (input.includes("s.shopee.vn") || input.includes("shope.ee")) {
-            const res = await fetch(`${GAS_URL}?url=${encodeURIComponent(input)}`);
-            const data = await res.json();
-            
-            // Nếu GAS không trả về longUrl, chúng ta dừng lại và báo lỗi
-            if (data && data.longUrl && data.longUrl.includes("shopee.vn/product")) {
-                target = data.longUrl;
-            } else {
-                alert("LỖI: Không thể bung link ngắn. Hãy kiểm tra lại quyền 'Anyone' trên Google Script!");
-                document.getElementById('loading').style.display = 'none';
-                return;
+<script>
+    // Link GAS mới bạn vừa gửi
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbx9gGZkOxw0ORmWWGEmVgbcB_8sHdqTOqT5qRqta8isaIib-lQlC7rG8pJoanZoi9I/exec"; 
+    const MY_ID = "17338730479";
+
+    async function handleConvert() {
+        const input = document.getElementById('inputUrl').value.trim();
+        if (!input) return alert("Vui lòng dán link!");
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('result').style.display = 'none';
+
+        try {
+            let longUrl = input;
+
+            // Nếu là link ngắn, gọi GAS để lấy link thật
+            if (input.includes("s.shopee.vn") || input.includes("shope.ee") || !input.includes("product")) {
+                const response = await fetch(`${GAS_URL}?url=${encodeURIComponent(input)}`);
+                const data = await response.json();
+                if (data.longUrl) {
+                    longUrl = data.longUrl;
+                } else {
+                    throw new Error("Không giải mã được");
+                }
             }
-        } else {
-            target = input;
+
+            // Xử lý làm sạch link bằng Regex (mạnh hơn dùng URL object thông thường)
+            // Lấy phần từ đầu link đến hết ID sản phẩm, bỏ qua mọi tham số sau đó
+            let cleanUrl = longUrl.split('?')[0];
+            
+            // Nếu là link mobile (m.shopee.vn), chuyển về bản desktop cho chuẩn
+            cleanUrl = cleanUrl.replace("m.shopee.vn", "shopee.vn");
+
+            // Gắn ID của bạn vào
+            const finalAff = `${cleanUrl}?utm_source=an_${MY_ID}&utm_medium=affiliates&utm_campaign=web_tool_final`;
+
+            document.getElementById('finalLink').innerText = finalAff;
+            document.getElementById('result').style.display = 'block';
+        } catch (e) {
+            alert("Lỗi: Không thể xử lý link này. Hãy kiểm tra lại link Shopee!");
+        } finally {
+            document.getElementById('loading').style.display = 'none';
         }
-        
-        // Xử lý link dài đã bung
-        const urlObj = new URL(target);
-        const cleanUrl = urlObj.origin + urlObj.pathname;
-        const final = `${cleanUrl}?utm_source=an_${MY_ID}&utm_medium=affiliates&utm_campaign=web_tool_v3`;
-        
-        document.getElementById('finalLink').innerText = final;
-        document.getElementById('result-area').style.display = 'block';
-    } catch (e) {
-        alert("LỖI KẾT NỐI: Trình duyệt bị chặn hoặc link Google Script sai!");
-    } finally {
-        document.getElementById('loading').style.display = 'none';
     }
-}
+
+    function copy() {
+        const text = document.getElementById('finalLink').innerText;
+        navigator.clipboard.writeText(text);
+        alert("Đã sao chép link sạch!");
+    }
+</script>
+
+</body>
+</html>
