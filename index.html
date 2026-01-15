@@ -1,89 +1,40 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Smart Convert | 17338730479</title>
-    <style>
-        :root { --shopee-orange: #ee4d2d; --bg-gray: #f5f5f5; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg-gray); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; box-sizing: border-box; }
-        h2 { color: var(--shopee-orange); text-align: center; margin-top: 0; }
-        input[type="text"] { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; outline: none; margin-bottom: 15px; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn-convert { background-color: var(--shopee-orange); color: white; }
-        .btn-copy { background-color: #28a745; color: white; margin-top: 10px; }
-        #loading { display: none; text-align: center; margin: 15px 0; color: var(--shopee-orange); font-weight: bold; }
-        #result-area { display: none; margin-top: 25px; padding: 15px; background-color: #fff8f6; border: 2px dashed var(--shopee-orange); border-radius: 10px; }
-        .result-link { background: white; padding: 12px; border-radius: 6px; border: 1px solid #eee; font-size: 12px; color: #0056b3; word-break: break-all; display: block; margin: 10px 0; }
-    </style>
-</head>
-<body>
+async function process() {
+    const input = document.getElementById('inputUrl').value.trim();
+    if (!input) return;
+    
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('result-area').style.display = 'none';
 
-<div class="container">
-    <h2>Shopee Convert Tool</h2>
-    <input type="text" id="inputUrl" placeholder="Dán link s.shopee.vn vào đây...">
-    <button class="btn-convert" onclick="process()">CHUYỂN ĐỔI NGAY</button>
-    <div id="loading">ĐANG GIẢI MÃ LINK GỐC...</div>
-    <div id="result-area">
-        <label style="font-weight:bold; font-size:14px;">Link của bạn (Đã bung link gốc):</label>
-        <span id="finalLink" class="result-link"></span>
-        <button class="btn-copy" onclick="copy()">SAO CHÉP LINK</button>
-    </div>
-</div>
+    try {
+        let target = "";
 
-<script>
-    // Link GAS của bạn
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzfYBsZGiOsLeX5IE8IkuGePgBjkDhFlXOskiULZSp5Q0JdNAOqZrPCb1JfRtTB7VA/exec"; 
-    const MY_ID = "17338730479";
-
-    async function process() {
-        const input = document.getElementById('inputUrl').value.trim();
-        if (!input) return;
-        
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('result-area').style.display = 'none';
-
-        try {
-            let target = "";
-
-            // Kiểm tra nếu là link ngắn s.shopee.vn hoặc shope.ee
-            if (input.includes("s.shopee.vn") || input.includes("shope.ee")) {
-                // BẮT BUỘC gọi Google Script để lấy link thật đằng sau link ngắn
-                const res = await fetch(`${GAS_URL}?url=${encodeURIComponent(input)}`);
-                const data = await res.json();
-                
-                if (data.longUrl) {
-                    target = data.longUrl;
-                } else {
-                    alert("Không thể giải mã link này. Hãy thử lại!");
-                    return;
-                }
+        // Nếu là link ngắn, bắt buộc phải qua GAS
+        if (input.includes("s.shopee.vn") || input.includes("shope.ee")) {
+            const res = await fetch(`${GAS_URL}?url=${encodeURIComponent(input)}`);
+            const data = await res.json();
+            
+            // Nếu GAS không trả về longUrl, chúng ta dừng lại và báo lỗi
+            if (data && data.longUrl && data.longUrl.includes("shopee.vn/product")) {
+                target = data.longUrl;
             } else {
-                target = input;
+                alert("LỖI: Không thể bung link ngắn. Hãy kiểm tra lại quyền 'Anyone' trên Google Script!");
+                document.getElementById('loading').style.display = 'none';
+                return;
             }
-            
-            // Làm sạch link: Xóa hết các tham số cũ (utm, credential...)
-            // Link sau khi dọn sẽ có dạng: https://shopee.vn/product/123/456
-            const urlObj = new URL(target);
-            const cleanUrl = urlObj.origin + urlObj.pathname;
-
-            // Gắn ID của bạn vào link sạch
-            const final = `${cleanUrl}?utm_source=an_${MY_ID}&utm_medium=affiliates&utm_campaign=web_tool`;
-            
-            document.getElementById('finalLink').innerText = final;
-            document.getElementById('result-area').style.display = 'block';
-        } catch (e) {
-            alert("Lỗi kết nối đến bộ giải mã! Hãy đảm bảo Google Script đã được chạy.");
-        } finally {
-            document.getElementById('loading').style.display = 'none';
+        } else {
+            target = input;
         }
+        
+        // Xử lý link dài đã bung
+        const urlObj = new URL(target);
+        const cleanUrl = urlObj.origin + urlObj.pathname;
+        const final = `${cleanUrl}?utm_source=an_${MY_ID}&utm_medium=affiliates&utm_campaign=web_tool_v3`;
+        
+        document.getElementById('finalLink').innerText = final;
+        document.getElementById('result-area').style.display = 'block';
+    } catch (e) {
+        alert("LỖI KẾT NỐI: Trình duyệt bị chặn hoặc link Google Script sai!");
+    } finally {
+        document.getElementById('loading').style.display = 'none';
     }
-
-    function copy() {
-        navigator.clipboard.writeText(document.getElementById('finalLink').innerText);
-        alert("Đã sao chép link sạch!");
-    }
-</script>
-</body>
-</html>
+}
