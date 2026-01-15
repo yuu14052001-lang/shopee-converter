@@ -3,86 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Smart Convert | 17338730479</title>
+    <title>Shopee Affiliate Converter | 17338730479</title>
     <style>
-        :root { --shopee-orange: #ee4d2d; --bg: #f4f4f4; --green: #28a745; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; min-height: 100vh; align-items: center; }
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
-        h2 { color: var(--shopee-orange); text-align: center; margin-bottom: 20px; }
-        input { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; margin-bottom: 15px; font-size: 14px; outline: none; }
-        input:focus { border-color: var(--shopee-orange); }
-        button { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn-convert { background: var(--shopee-orange); color: white; }
-        .btn-copy { background: var(--green); color: white; margin-top: 10px; }
-        #loading { display: none; text-align: center; color: var(--shopee-orange); font-weight: bold; margin: 15px 0; }
-        #result-area { display: none; margin-top: 25px; padding: 15px; background: #fff8f6; border: 2px dashed var(--shopee-orange); border-radius: 10px; }
-        .final-url { word-break: break-all; font-size: 13px; color: #0056b3; background: white; padding: 10px; display: block; border-radius: 5px; margin: 10px 0; border: 1px solid #eee; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #ee4d2d; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 12px; background-color: #ee4d2d; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #d73211; }
+        #loading { display: none; margin: 15px 0; color: #ee4d2d; font-weight: bold; }
+        #result-box { display: none; margin-top: 20px; padding: 15px; background: #fff8f6; border: 2px dashed #ee4d2d; border-radius: 10px; text-align: left; }
+        .result-link { word-break: break-all; font-size: 12px; color: #0056b3; background: white; padding: 10px; display: block; border-radius: 5px; margin: 10px 0; border: 1px solid #eee; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Shopee Convert Pro</h2>
+<div class="container">
+    <h2>Shopee Convert</h2>
     <input type="text" id="urlInput" placeholder="Dán link s.shopee.vn vào đây...">
-    <button class="btn-convert" onclick="startConvert()">CHUYỂN ĐỔI NGAY</button>
+    <button onclick="handleConvert()">CHUYỂN ĐỔI</button>
     
-    <div id="loading">ĐANG GIẢI MÃ LINK GỐC...</div>
+    <div id="loading">ĐANG GIẢI MÃ LINK...</div>
 
-    <div id="result-area">
-        <label style="font-weight: bold; font-size: 14px;">Link Affiliate của bạn:</label>
-        <span class="final-url" id="resLink"></span>
-        <button class="btn-copy" onclick="copy()">SAO CHÉP LINK</button>
+    <div id="result-box">
+        <label style="font-weight: bold;">Link Affiliate của bạn:</label>
+        <span id="resLink" class="result-link"></span>
+        <button onclick="copyLink()" style="background-color: #28a745;">SAO CHÉP</button>
     </div>
 </div>
 
 <script>
-    // Link GAS mới của bạn
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwaQtbIFSXYVhg5g47nve5WjWdeGunWem3uP3ehJc1gCZECHIuLo8nsoVDdfCjDJW0/exec";
     const MY_ID = "17338730479";
 
-    async function startConvert() {
+    async function handleConvert() {
         const input = document.getElementById('urlInput').value.trim();
         if (!input) return alert("Vui lòng dán link!");
 
         document.getElementById('loading').style.display = 'block';
-        document.getElementById('result-area').style.display = 'none';
+        document.getElementById('result-box').style.display = 'none';
 
         try {
             let targetUrl = input;
 
-            // Xử lý nếu là link ngắn
             if (input.includes("s.shopee.vn") || input.includes("shope.ee") || !input.includes("product/")) {
                 const response = await fetch(`${GAS_URL}?url=${encodeURIComponent(input)}`);
                 const data = await response.json();
-                
-                if (data.longUrl) {
-                    targetUrl = data.longUrl;
-                } else {
-                    throw new Error("Không thể giải mã");
-                }
+                if (data.longUrl) targetUrl = data.longUrl;
             }
 
-            // LÀM SẠCH LINK: Chỉ giữ lại phần sản phẩm, xóa mọi tracking cũ
-            let cleanUrl = targetUrl.split('?')[0];
-            cleanUrl = cleanUrl.replace("m.shopee.vn", "shopee.vn");
-
-            // Gắn ID của bạn
+            let cleanUrl = targetUrl.split('?')[0].replace("m.shopee.vn", "shopee.vn");
             const finalLink = `${cleanUrl}?utm_source=an_${MY_ID}&utm_medium=affiliates&utm_campaign=web_convert`;
 
             document.getElementById('resLink').innerText = finalLink;
-            document.getElementById('result-area').style.display = 'block';
+            document.getElementById('result-box').style.display = 'block';
         } catch (e) {
-            console.error(e);
-            alert("Lỗi: Không thể giải mã link này. Hãy kiểm tra lại link Shopee!");
+            alert("Lỗi: Không thể giải mã. Hãy kiểm tra lại Google Script!");
         } finally {
             document.getElementById('loading').style.display = 'none';
         }
     }
 
-    function copy() {
+    function copyLink() {
         const text = document.getElementById('resLink').innerText;
         navigator.clipboard.writeText(text);
-        alert("Đã sao chép link thành công!");
+        alert("Đã sao chép!");
     }
 </script>
 
