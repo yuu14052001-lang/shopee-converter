@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Săn Sale Tool - Admin 17338730479</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { color: #ee4d2d; text-align: center; margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; margin-bottom: 15px; outline: none; }
+        input:focus { border-color: #ee4d2d; }
+        button { width: 100%; padding: 15px; background: #ee4d2d; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #d73211; }
+        #loading { display: none; text-align: center; color: #ff5722; font-weight: bold; margin: 15px 0; }
+        #result-box { display: none; margin-top: 25px; padding: 15px; background: #fff8f6; border: 2px dashed #ee4d2d; border-radius: 10px; }
+        .res-link { word-break: break-all; font-size: 13px; color: #0056b3; background: #fff; padding: 10px; border-radius: 5px; margin: 10px 0; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Shopee Convert Tool</h2>
+    <p style="text-align: center; font-size: 13px; color: #666;">Hỗ trợ link s.shopee.vn và shope.ee</p>
+    
+    <input type="text" id="urlInput" placeholder="Dán link Shopee vào đây...">
+    <button onclick="startConvert()">BẮT ĐẦU CHUYỂN ĐỔI</button>
+
+    <div id="loading">Đang giải mã link... Vui lòng đợi...</div>
+
+    <div id="result-box">
+        <strong>Link Affiliate của bạn:</strong>
+        <span class="res-link" id="finalUrl"></span>
+        <button onclick="copyLink()" style="background: #28a745;">SAO CHÉP</button>
+    </div>
+</div>
+
+<script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyoTxQdb6FAlVNKz73GoYoCDkrcNRwH1oFN0FtZNUI0dtImqsng-jBhFc6K2zb0fGs/exec"; // <--- QUAN TRỌNG: Thay bằng link của bạn
+    const MY_ID = "17338730479";
+
+    async function startConvert() {
+        const input = document.getElementById('urlInput').value.trim();
+        if (!input) return alert("Hãy dán link!");
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('result-box').style.display = 'none';
+
+        try {
+            let targetUrl = input;
+            
+            // Kiểm tra nếu là link ngắn thì mới gửi đi giải mã
+            if (input.includes("shopee.vn") || input.includes("shope.ee")) {
+                const response = await fetch(`${GAS_URL}?url=${encodeURIComponent(input)}`);
+                const data = await response.json();
+                targetUrl = data.longUrl || input;
+            }
+
+            // Làm sạch link và gắn ID của bạn
+            const cleanUrl = targetUrl.split('?')[0];
+            const finalAff = `${cleanUrl}?utm_source=an_${MY_ID}&utm_medium=affiliates&utm_campaign=web_tool`;
+
+            document.getElementById('finalUrl').innerText = finalAff;
+            document.getElementById('result-box').style.display = 'block';
+        } catch (err) {
+            alert("Có lỗi xảy ra, hãy kiểm tra lại link!");
+        } finally {
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+
+    function copyLink() {
+        const text = document.getElementById('finalUrl').innerText;
+        navigator.clipboard.writeText(text);
+        alert("Đã sao chép link thành công!");
+    }
+</script>
+
+</body>
+</html>
