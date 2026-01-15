@@ -9,9 +9,7 @@
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg-gray); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; box-sizing: border-box; }
         h2 { color: var(--shopee-orange); text-align: center; margin-top: 0; }
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; font-size: 14px; }
-        input[type="text"] { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; outline: none; }
+        input[type="text"] { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; outline: none; margin-bottom: 15px; }
         button { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
         .btn-convert { background-color: var(--shopee-orange); color: white; }
         .btn-copy { background-color: #28a745; color: white; margin-top: 10px; }
@@ -24,21 +22,18 @@
 
 <div class="container">
     <h2>Shopee Convert Tool</h2>
-    <div class="input-group">
-        <label>Dán link (Ngắn hoặc Dài):</label>
-        <input type="text" id="inputUrl" placeholder="https://s.shopee.vn/...">
-    </div>
-    <button class="btn-convert" onclick="process()">CHUYỂN ĐỔI</button>
-    <div id="loading">Đang giải mã và xử lý...</div>
+    <input type="text" id="inputUrl" placeholder="Dán link s.shopee.vn vào đây...">
+    <button class="btn-convert" onclick="process()">CHUYỂN ĐỔI NGAY</button>
+    <div id="loading">ĐANG GIẢI MÃ LINK GỐC...</div>
     <div id="result-area">
-        <label>Link Affiliate của bạn (17338730479):</label>
+        <label style="font-weight:bold; font-size:14px;">Link của bạn (Đã bung link gốc):</label>
         <span id="finalLink" class="result-link"></span>
         <button class="btn-copy" onclick="copy()">SAO CHÉP LINK</button>
     </div>
 </div>
 
 <script>
-    // Link Google Script đã cập nhật của bạn
+    // Link GAS của bạn
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzfYBsZGiOsLeX5IE8IkuGePgBjkDhFlXOskiULZSp5Q0JdNAOqZrPCb1JfRtTB7VA/exec"; 
     const MY_ID = "17338730479";
 
@@ -50,25 +45,45 @@
         document.getElementById('result-area').style.display = 'none';
 
         try {
-            let target = input;
-            
-            // Nếu là link ngắn, gọi Google Script để lấy link gốc
-            if ((input.includes("shopee.vn") || input.includes("shope.ee")) && !input.includes("/product/")) {
+            let target = "";
+
+            // Kiểm tra nếu là link ngắn s.shopee.vn hoặc shope.ee
+            if (input.includes("s.shopee.vn") || input.includes("shope.ee")) {
+                // BẮT BUỘC gọi Google Script để lấy link thật đằng sau link ngắn
                 const res = await fetch(`${GAS_URL}?url=${encodeURIComponent(input)}`);
                 const data = await res.json();
+                
                 if (data.longUrl) {
                     target = data.longUrl;
+                } else {
+                    alert("Không thể giải mã link này. Hãy thử lại!");
+                    return;
                 }
+            } else {
+                target = input;
             }
             
-            // Làm sạch link (xóa tham số cũ) và gắn ID của bạn
+            // Làm sạch link: Xóa hết các tham số cũ (utm, credential...)
+            // Link sau khi dọn sẽ có dạng: https://shopee.vn/product/123/456
             const urlObj = new URL(target);
-            const clean = urlObj.origin + urlObj.pathname;
-            const final = `${clean}?utm_source=an_${MY_ID}&utm_medium=affiliates&utm_campaign=web_tool_v2`;
+            const cleanUrl = urlObj.origin + urlObj.pathname;
+
+            // Gắn ID của bạn vào link sạch
+            const final = `${cleanUrl}?utm_source=an_${MY_ID}&utm_medium=affiliates&utm_campaign=web_tool`;
             
             document.getElementById('finalLink').innerText = final;
             document.getElementById('result-area').style.display = 'block';
         } catch (e) {
-            alert("Lỗi: Không thể giải mã link ngắn. Hãy kiểm tra lại link nhập vào!");
+            alert("Lỗi kết nối đến bộ giải mã! Hãy đảm bảo Google Script đã được chạy.");
         } finally {
-            document.getElementById('loading').style.
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+
+    function copy() {
+        navigator.clipboard.writeText(document.getElementById('finalLink').innerText);
+        alert("Đã sao chép link sạch!");
+    }
+</script>
+</body>
+</html>
